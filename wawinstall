@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+WINE_PFX="$HOME/.wine"
+WINE_MODS="$WINE_PFX/drive_c/users/$USER/AppData/Local/activision/codwaw/mods"
+
+WAW_PFX="$HOME/.steam/steam/steamapps/compatdata/10090/pfx"
+WAW_MODS="$WAW_PFX/drive_c/users/steamuser/AppData/Local/Activision/CoDWaW/mods"
+
+EXE="$1"
+
+assert_exe() {
+    if [[ -z "$EXE" ]]
+    then
+        echo "Must provide path to installer exe"
+        exit 1
+    fi
+}
+
+assert_paths() {
+    if [[ ! -d "$WINE_MODS" ]]
+    then
+        echo "Path does not exist: $WINE_MODS"
+        exit 1
+    fi
+
+    if [[ ! -d "$WAW_MODS" ]]
+    then
+        echo "Path does not exist: $WINE_MODS"
+        exit 1
+    fi
+}
+
+assert_wine() {
+    if ! command -v wine &> /dev/null
+    then
+        echo "Executable wine not found"
+        exit 1
+    fi
+}
+
+move_mods() {
+    local mod_name
+
+    for mod in "$WINE_MODS"/*/
+    do
+        mod_name="$(basename -- "$mod")"
+        [[ -d "$WAW_MODS/$mod_name" ]] && rm -rf "$WAW_MODS/$mod_name"
+        mv "$mod" "$WAW_MODS/"
+        echo "Installed $mod_name"
+    done
+}
+
+assert_exe
+assert_paths
+assert_wine
+wine "$EXE" &> /dev/null
+move_mods
